@@ -36,7 +36,12 @@ const GenerateMSP = () => {
   const network = config.Network || [];
   let mainPath;
   mainPath = path.join(__dirname, `../${network['-Name']}-network`);
-  fs.rmdirSync(mainPath, {recursive: true})
+  try{
+    fs.rmdirSync(mainPath, {recursive: true})
+  }
+  catch{
+    
+  }
 
   try {
     fs.mkdirSync(mainPath);

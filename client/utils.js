@@ -19,6 +19,147 @@ OrdererOUIdentifier:
   OrganizationalUnitIdentifier: orderer
 `;
 
+function generateCongigTX(){
+  var port = 7050;
+  const ordererOrgs = (name, domain, port) => {
+    return `        - &${name}Org
+    Name: ${name}Org
+    ID: ${name}MSP
+    MSPDir: crypto-config/ordererOrganizations/${domain}/msp
+    Policies:
+        Readers:
+            Type: Signature
+            Rule: "OR('${name}MSP.member')"
+        Writers:
+            Type: Signature
+            Rule: "OR('${name}MSP.member')"
+        Admins:
+            Type: Signature
+            Rule: "OR('${name}MSP.admin')"
+    OrdererEndpoints:
+        - orderer.acme.com: 7050`
+  }
+  const Orgs = (name, domain, anchor, port) => {
+    return `        - &${name}
+    Name: ${name}MSP
+    ID: ${name}MSP
+    MSPDir: crypto-config/peerOrganizations/${domain}/msp
+    Policies:
+        Readers:
+            Type: Signature
+            Rule: "OR('${name}MSP.admin', '${name}MSP.peer', '${name}MSP.client')"
+        Writers:
+            Type: Signature
+            Rule: "OR('${name}MSP.admin', '${name}MSP.client')"
+        Admins:
+            Type: Signature
+            Rule: "OR('O${name}MSP.admin')"
+        Endorsement:
+            Type: Signature
+            Rule: "OR('${name}MSP.peer')"
+    AnchorPeers:
+        - Host: ${anchor}
+          Port: 7051`
+  }
+  const soloConsensure = (name, domain) =>{
+    return `    Orderer: &OrdererDefaults
+
+    OrdererType: solo
+
+#    OrdererType: etcdraft
+
+    EtcdRaft:
+        Consenters:
+        - Host: ${domain}
+          Port: 7050
+          ClientTLSCert: ../organizations/ordererOrganizations/${domain}/orderers/orderer.${domain}/tls/server.crt
+          ServerTLSCert: ../organizations/ordererOrganizations/${domain}/orderers/orderer.${domain}/tls/server.crt
+
+    Addresses:
+        - orderer.${domain}:7050
+    BatchTimeout: 2s
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+
+    Kafka:
+        Brokers:
+            - 127.0.0.1:9092
+    Organizations:
+
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"`
+  }
+  const chanelDefaults = () => {
+    return `    Channel: &ChannelDefaults
+    # Policies defines the set of policies at this level of the config tree
+    # For Channel policies, their canonical path is
+    #   /Channel/<PolicyName>
+    Policies:
+        # Who may invoke the 'Deliver' API
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        # Who may invoke the 'Broadcast' API
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        # By default, who may modify elements at this config level
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+    # Capabilities describes the channel level capabilities, see the
+    # dedicated Capabilities section elsewhere in this file for a full
+    # description
+    Capabilities:
+        <<: *ChannelCapabilities
+
+################################################################################
+#   Profile
+################################################################################
+Profiles:
+
+    ThreeOrgsOrdererGenesis:
+        <<: *ChannelDefaults
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *Org1
+                    - *Org2
+                    - *Org3
+    ThreeOrgsChannel:
+        Consortium: SampleConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *Org1
+                - *Org2
+                - *Org3
+            Capabilities:
+                <<: *ApplicationCapabilities`
+  }
+} 
 
 
 function generateECDSACSR(commonName, organization, ou, dir_k = __dirname) {
