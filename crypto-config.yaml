@@ -3,7 +3,7 @@ Network:
 
 OrdererOrgs:
   - Name: Orderer
-    Domain: acme.com
+    Domain: matcom.com
     EnableNodeOUs: true
     Specs:
       - Hostname: orderer
@@ -12,19 +12,19 @@ OrdererOrgs:
 
 PeerOrgs:
   - Name: Org1
-    Domain: org1.acme.com
+    Domain: org1.matcom.com
     Peers:
       - Name: peer0
-        Domain: peer0.org1.acme.com
+        Domain: peer0.org1.matcom.com
 
     
   - Name: Org2
-    Domain: org2.acme.com
+    Domain: org2.matcom.com
     Peers:
       - Name: peer1
-        Domain: peer1.org2.acme.com
+        Domain: peer0.org2.matcom.com
   - Name: Org3
-    Domain: org3.acme.com
+    Domain: org3.matcom.com
     Peers:
       - Name: peer2
-        Domain: peer1.org3.acme.com
+        Domain: peer0.org3.matcom.com

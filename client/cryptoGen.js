@@ -1,16 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
-const { generateKey } = require('crypto');
-const { create } = require('domain');
-const { userInfo } = require('os');
-
-const axios = require("axios");
-const { name } = require('ejs');
 const { createMSPStructureOrg, createMSPStructurePeer, generateCongigTX } = require('./utils');
-const { domainToUnicode } = require('url');
-
-
+const {peerBase,buildPeerBaseDC, buildContainers} = require('./docker_utils')
+const {execSync} = require('child_process')
 
 
 
@@ -47,7 +40,7 @@ const GenerateMSP = async () => {
   var orgDirList = {};
   var orgsInfo = [];
   var orderersIfo = [];
-
+  var peersInfo = [];
   const ordererOrgs = config.OrdererOrgs || [];
 
   // Acceder a las organizaciones de orderers
@@ -99,6 +92,7 @@ const GenerateMSP = async () => {
       console.log('  Domain:', peer.Domain);
       anchor = peer.Domain;
       await createMSPStructurePeer(peerPath, peer.Domain, org.Domain, 'peer');
+      peersInfo.push({name: peer.Name, domain: peer.Domain, orgName: org.Name, orgDomain: org.Domain})
     }
 
     orgsInfo.push({
@@ -111,6 +105,25 @@ const GenerateMSP = async () => {
   // Esperar a que se complete la generación del archivo de configuración
   var configTxB = generateCongigTX(orgsInfo, orderersIfo[0].name, orderersIfo[0].domain);
   fs.writeFileSync(path.join(mainPath, 'configtx.yaml'), configTxB)
+  fs.mkdirSync(path.join(mainPath, 'base'))
+  fs.writeFileSync(path.join(mainPath, 'base/peer-base.yaml'), peerBase(network))
+  fs.writeFileSync(path.join(mainPath, 'base/docker-compose-base.yaml'), buildPeerBaseDC(orderersIfo[0], peersInfo))
+  fs.writeFileSync(path.join(mainPath, 'docker-compose-cli-couchdb.yaml'), buildContainers(peersInfo, orderersIfo[0], peersInfo[0]))
+  artifactsPath = path.join(mainPath, 'channel-artifacts')
+  fs.mkdirSync(artifactsPath)
+  //execSync(`
+  //export CHANNEL_NAME=${network['-Name']}
+  //export VERBOSE=false
+  //export FABRIC_CFG_PATH=${mainPath}`)
+  execSync(`configtxgen  -profile MultiOrgsOrdererGenesis 	-channelID system-channel -outputBlock ./channel-artifacts/genesis.block`)
+  execSync(`configtxgen -profile MultiOrgsChannel -outputCreateChannelTx ./channel-artifacts/channel.tx -channelID ${network['-Name']}`)
+  
+  orgsInfo.forEach(org => {
+    execSync(`configtxgen -profile MultiOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/${org.name}MSPanchors.tx -channelID ${network['-Name']} -asOrg ${org.name}1MSP`)
+  })
+
+
+
 };
 
 GenerateMSP();
