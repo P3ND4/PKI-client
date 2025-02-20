@@ -16,7 +16,7 @@
                     Type: Signature
                     Rule: "OR('OrdererMSP.admin')"
             OrdererEndpoints:
-                - orderer.acme.com: 7050
+                - orderer.matcom.com:7050
 
         - &Org1
             Name: Org1MSP
@@ -31,7 +31,7 @@
                     Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
                 Admins:
                     Type: Signature
-                    Rule: "OR('OOrg1MSP.admin')"
+                    Rule: "OR('Org1MSP.admin')"
                 Endorsement:
                     Type: Signature
                     Rule: "OR('Org1MSP.peer')"
@@ -52,7 +52,7 @@
                     Rule: "OR('Org2MSP.admin', 'Org2MSP.client')"
                 Admins:
                     Type: Signature
-                    Rule: "OR('OOrg2MSP.admin')"
+                    Rule: "OR('Org2MSP.admin')"
                 Endorsement:
                     Type: Signature
                     Rule: "OR('Org2MSP.peer')"
@@ -73,7 +73,7 @@
                     Rule: "OR('Org3MSP.admin', 'Org3MSP.client')"
                 Admins:
                     Type: Signature
-                    Rule: "OR('OOrg3MSP.admin')"
+                    Rule: "OR('Org3MSP.admin')"
                 Endorsement:
                     Type: Signature
                     Rule: "OR('Org3MSP.peer')"
@@ -157,28 +157,23 @@
                 Rule: "ANY Writers"
 
     Channel: &ChannelDefaults
-        # Policies defines the set of policies at this level of the config tree
-        # For Channel policies, their canonical path is
-        #   /Channel/<PolicyName>
-          Policies:
-              # Who may invoke the 'Deliver' API
-              Readers:
-                  Type: ImplicitMeta
-                  Rule: "ANY Readers"
-              # Who may invoke the 'Broadcast' API
-              Writers:
-                  Type: ImplicitMeta
-                  Rule: "ANY Writers"
-              # By default, who may modify elements at this config level
-              Admins:
-                  Type: ImplicitMeta
-                  Rule: "MAJORITY Admins"
 
-        # Capabilities describes the channel level capabilities, see the
-        # dedicated Capabilities section elsewhere in this file for a full
-        # description
-          Capabilities:
-              <<: *ChannelCapabilities
+        Policies:
+            # Who may invoke the 'Deliver' API
+            Readers:
+                Type: ImplicitMeta
+                Rule: "ANY Readers"
+            # Who may invoke the 'Broadcast' API
+            Writers:
+                Type: ImplicitMeta
+                Rule: "ANY Writers"
+            # By default, who may modify elements at this config level
+            Admins:
+                Type: ImplicitMeta
+                Rule: "MAJORITY Admins"
+
+        Capabilities:
+            <<: *ChannelCapabilities
 
 ################################################################################
 #   Profile
@@ -196,9 +191,9 @@
             Consortiums:
                 SampleConsortium:
                     Organizations:
-                    - *Org1
-                    - *Org2
-                    - *Org3
+                        - *Org1
+                        - *Org2
+                        - *Org3
 
         MultiOrgsChannel:
             Consortium: SampleConsortium
@@ -206,9 +201,9 @@
             Application:
                 <<: *ApplicationDefaults
                 Organizations:
-                - *Org1
-                - *Org2
-                - *Org3
+                    - *Org1
+                    - *Org2
+                    - *Org3
 
             Capabilities:
                 <<: *ApplicationCapabilities

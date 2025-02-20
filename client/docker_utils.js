@@ -65,7 +65,7 @@ const peerBaseFull = (peer, port  ) => {
 
 const ordererBase = (orderer) => {
   return `
-  orderer.${orderer.domain}.com:
+  orderer.${orderer.domain}:
     # ---CHANGED--- The container name is a copy of the orderer name
     container_name: orderer.${orderer.domain}.com
     image: hyperledger/fabric-orderer:2.2.0

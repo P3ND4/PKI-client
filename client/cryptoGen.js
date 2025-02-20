@@ -111,16 +111,18 @@ const GenerateMSP = async () => {
   fs.writeFileSync(path.join(mainPath, 'docker-compose-cli-couchdb.yaml'), buildContainers(peersInfo, orderersIfo[0], peersInfo[0]))
   artifactsPath = path.join(mainPath, 'channel-artifacts')
   fs.mkdirSync(artifactsPath)
-  //execSync(`
-  //export CHANNEL_NAME=${network['-Name']}
-  //export VERBOSE=false
-  //export FABRIC_CFG_PATH=${mainPath}`)
-  execSync(`configtxgen  -profile MultiOrgsOrdererGenesis 	-channelID system-channel -outputBlock ./channel-artifacts/genesis.block`)
-  execSync(`configtxgen -profile MultiOrgsChannel -outputCreateChannelTx ./channel-artifacts/channel.tx -channelID ${network['-Name']}`)
+  execSync(`
+  export CHANNEL_NAME=${network['-Name']}
+  export VERBOSE=false
+  export FABRIC_CFG_PATH=${mainPath}`)
+  execSync(`export CHANNEL_NAME=${network['-Name']} && export FABRIC_CFG_PATH=${mainPath} && export VERBOSE=false && configtxgen  -profile MultiOrgsOrdererGenesis 	-channelID system-channel -outputBlock ${artifactsPath}/genesis.block`)
+  execSync(`export CHANNEL_NAME=${network['-Name']} && export FABRIC_CFG_PATH=${mainPath} && configtxgen -profile MultiOrgsChannel -outputCreateChannelTx ${artifactsPath}/channel.tx -channelID ${network['-Name']}`)
   
   orgsInfo.forEach(org => {
-    execSync(`configtxgen -profile MultiOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/${org.name}MSPanchors.tx -channelID ${network['-Name']} -asOrg ${org.name}1MSP`)
+    console.log(org.name)
+    execSync(`export CHANNEL_NAME=${network['-Name']} && export FABRIC_CFG_PATH=${mainPath} && configtxgen -profile MultiOrgsChannel -outputAnchorPeersUpdate ${artifactsPath}/${org.name}MSPanchors.tx -channelID ${network['-Name']} -asOrg ${org.name}MSP`)
   })
+  execSync(`export CHANNEL_NAME=${network['-Name']} && export FABRIC_CFG_PATH=${mainPath} && export VERBOSE=false && sudo CHANNEL_NAME=$CHANNEL_NAME docker compose -f ${mainPath}/docker-compose-cli-couchdb.yaml up -d`)
 
 
 

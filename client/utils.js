@@ -70,7 +70,7 @@ const ordererOrgs = (name, domain, port) => {
                     Type: Signature
                     Rule: "OR('${name}MSP.admin')"
             OrdererEndpoints:
-                - orderer.acme.com: 7050`
+                - orderer.${domain}:7050`
 }
 const Orgs = (name, domain, anchor, port) => {
   return `
@@ -87,7 +87,7 @@ const Orgs = (name, domain, anchor, port) => {
                     Rule: "OR('${name}MSP.admin', '${name}MSP.client')"
                 Admins:
                     Type: Signature
-                    Rule: "OR('O${name}MSP.admin')"
+                    Rule: "OR('${name}MSP.admin')"
                 Endorsement:
                     Type: Signature
                     Rule: "OR('${name}MSP.peer')"
@@ -141,14 +141,14 @@ const soloConsensure = (name, domain) => {
 const orgNamesC = (orgs) => {
   result = ''
   orgs.forEach(org => {
-    result += `                    - *${org.name}\n`
+    result += `                        - *${org.name}\n`
   })
   return result
 }
 const orgNamesA = (orgs) => {
   result = ''
   orgs.forEach(org => {
-    result += `                - *${org.name}\n`
+    result += `                    - *${org.name}\n`
   })
   return result
 }
@@ -156,28 +156,23 @@ const orgNamesA = (orgs) => {
 const channelDefaults = (orgs) => {
   return `
     Channel: &ChannelDefaults
-        # Policies defines the set of policies at this level of the config tree
-        # For Channel policies, their canonical path is
-        #   /Channel/<PolicyName>
-          Policies:
-              # Who may invoke the 'Deliver' API
-              Readers:
-                  Type: ImplicitMeta
-                  Rule: "ANY Readers"
-              # Who may invoke the 'Broadcast' API
-              Writers:
-                  Type: ImplicitMeta
-                  Rule: "ANY Writers"
-              # By default, who may modify elements at this config level
-              Admins:
-                  Type: ImplicitMeta
-                  Rule: "MAJORITY Admins"
 
-        # Capabilities describes the channel level capabilities, see the
-        # dedicated Capabilities section elsewhere in this file for a full
-        # description
-          Capabilities:
-              <<: *ChannelCapabilities
+        Policies:
+            # Who may invoke the 'Deliver' API
+            Readers:
+                Type: ImplicitMeta
+                Rule: "ANY Readers"
+            # Who may invoke the 'Broadcast' API
+            Writers:
+                Type: ImplicitMeta
+                Rule: "ANY Writers"
+            # By default, who may modify elements at this config level
+            Admins:
+                Type: ImplicitMeta
+                Rule: "MAJORITY Admins"
+
+        Capabilities:
+            <<: *ChannelCapabilities
 
 ################################################################################
 #   Profile
